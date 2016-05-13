@@ -18,6 +18,9 @@ gem 'cancancan'
 # Rolify
 gem 'rolify'
 
+# Devise
+gem 'devise', git: 'https://github.com/plataformatec/devise.git'
+
 # Use Redis adapter to run Action Cable in production
 # gem 'redis', '~> 3.0'
 # Use ActiveModel has_secure_password
