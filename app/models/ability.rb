@@ -29,6 +29,20 @@ class Ability
 
     can :crud, User
     can :invite, User
+    
+    # Adding can rules do not override prior rules, but instead are logically or
+    # Adding cannot will override can rule
+    
+    if user.role? :moderator
+      can :manage, Project
+      cannot :destroy, Project
+      can :manage, Comment
+    end
+    
+    if user.admin? :admin
+      can :destroy, Project
+    end
+    # With Block admin can will override moderator cannot
 
     can :update, Project do |project|
       project.priority < 3
