@@ -2,31 +2,52 @@ class Ability
   include CanCan::Ability
 
   def initialize(user)
-    # Define abilities for the passed in user here. For example:
+    # if user.has_role? :admin
+    #   can :manage, :all
+    # else
+    #   can :read, :all
+    # end
+    user ||= User.new
+
+    alias_action :create, :read, :update, :destroy, to: :crud
+
+    can :read, Project, category: { visible: true } # Here the project can only be read if the category it belongs to is visible. INNRE JOIN
+    can :read, Project, active: true, user_id: user.id
+    # can :read, Article, is_published: true
+    # can :read, Article, author_id: user.id,
+    #                     is_published: [false, nil]
     #
-    #   user ||= User.new # guest user (not logged in)
-    #   if user.admin?
-    #     can :manage, :all
-    #   else
-    #     can :read, :all
-    #   end
     #
-    # The first argument to `can` is the action you are giving the user
-    # permission to do.
-    # If you pass :manage it will apply to every action. Other common actions
-    # here are :read, :create, :update and :destroy.
-    #
-    # The second argument is the resource the user can perform the action on.
-    # If you pass :all it will apply to every resource. Otherwise pass a Ruby
-    # class of the resource.
-    #
-    # The third argument is an optional hash of conditions to further filter the
-    # objects.
-    # For example, here the user can only update published articles.
-    #
-    #   can :update, Article, :published => true
-    #
-    # See the wiki for details:
-    # https://github.com/CanCanCommunity/cancancan/wiki/Defining-Abilities
+    #                   SELECT `articles`.*
+    #                   FROM   `articles`
+    #                   WHERE  `articles`.`is_published` = 1
+    #                   OR     (
+    #                                 `articles`.`author_id` = 97
+    #                          AND    (
+    #                                        `articles`.`is_published` = 0
+    #                                 OR     `articles`.`is_published` IS NULL )
+
+    can :crud, User
+    can :invite, User
+
+    can :update, Project do |project|
+      project.priority < 3
+    end
+
+    if user.has_role? :admin
+      can :manage, :all # user can perform any action on any object
+    else
+      can :read, Forum  # user can read all Forum object
+      # can :manage, Forum if user.has_role? (:moderator, Forum)
+      can :write, Forum, id: Forum.with_role(:moderator, user).pluck(:id)
+    end
+    # https://github.com/RolifyCommunity/rolify/wiki/Devise---CanCanCan---rolify-Tutorial
+    # https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities
+    # https://github.com/CanCanCommunity/cancancan/wiki/Custom-Actions
+
+    # alias_action :index, :show, :to => :read
+    # alias_action :new, :to => :create
+    # alias_action :edit, :to => :update
+
   end
 end

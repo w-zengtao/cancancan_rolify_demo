@@ -14,6 +14,9 @@ class ForumsController < ApplicationController
   end
 
   def update
+    # 能进入这个 action 的所有请求都是已经在 Rolify 层面走通了的
+    # 下面就是一个 在 cancancan 层面隔离的例子
+    authorize! :assign_role, current_user if params[:user][:assign_role]
   end
 
   def destroy
